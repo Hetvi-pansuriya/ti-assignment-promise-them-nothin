@@ -1,0 +1,112 @@
+# docker-compose.yml — RelayAPI Phase 4: 3-node distributed deployment
+#
+# Services:
+#   redis        — Redis 7, internal-only (no host port published by design)
+#   app-node-a   — Express app node A, host port 3001 (direct access for testing)
+#   app-node-b   — Express app node B, host port 3002 (direct access for testing)
+#   app-node-c   — Express app node C, host port 3003 (direct access for testing)
+#   proxy        — nginx round-robin load balancer, host port 8080
+#
+# Normal traffic path:  client → :8080 (proxy) → round-robin → :3000 (any node) → redis
+# Direct node access:   client → :3001/:3002/:3003 (specific node, bypasses proxy)
+#                       This exists for Phase 5's race-condition tests only.
+#
+# Architecture guarantees maintained:
+#  - Redis is NOT reachable from the host (no ports: mapping on the redis service).
+#  - Proxy uses plain nginx round-robin, no ip_hash, no sticky sessions.
+#  - All three app nodes share the same image and config — only NODE_ID differs.
+#  - REDIS_HOST=redis is set on every app node so ioredis connects via the
+#    internal Docker network without any code changes (client.js already reads
+#    this env var; it falls back to 'localhost' only when unset).
+
+services:
+
+  # ── Redis ──────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    # No 'ports:' mapping — Redis is intentionally unreachable from the host.
+    # The app nodes connect to it via the 'relayapi-net' Docker network using
+    # the service name 'redis' as the hostname.
+    restart: unless-stopped
+    networks:
+      - relayapi-net
+
+  # ── App node A ─────────────────────────────────────────────────────────────
+  app-node-a:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      NODE_ID: node-a
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      PORT: "3000"
+    ports:
+      # Direct access port for Phase 5 race-condition tests (bypasses proxy).
+      # Not the normal traffic path — normal traffic enters at :8080.
+      - "3001:3000"
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - relayapi-net
+
+  # ── App node B ─────────────────────────────────────────────────────────────
+  app-node-b:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      NODE_ID: node-b
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      PORT: "3000"
+    ports:
+      # Direct access port for Phase 5 race-condition tests (bypasses proxy).
+      - "3002:3000"
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - relayapi-net
+
+  # ── App node C ─────────────────────────────────────────────────────────────
+  app-node-c:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      NODE_ID: node-c
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      PORT: "3000"
+    ports:
+      # Direct access port for Phase 5 race-condition tests (bypasses proxy).
+      - "3003:3000"
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - relayapi-net
+
+  # ── nginx reverse proxy ────────────────────────────────────────────────────
+  proxy:
+    image: nginx:1.27-alpine
+    volumes:
+      # Mount only the nginx config; no app source needed in the proxy container.
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      # The single host-facing entry point for normal traffic.
+      - "8080:80"
+    depends_on:
+      - app-node-a
+      - app-node-b
+      - app-node-c
+    restart: unless-stopped
+    networks:
+      - relayapi-net
+
+# ── Network ───────────────────────────────────────────────────────────────────
+networks:
+  relayapi-net:
+    driver: bridge

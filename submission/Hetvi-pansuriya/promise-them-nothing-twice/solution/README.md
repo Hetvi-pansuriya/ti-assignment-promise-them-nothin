@@ -53,6 +53,42 @@ docker run --rm -p 6379:6379 redis:7-alpine
 
 ---
 
+## Before running `docker compose up`
+
+> ⚠️ **Stop any locally-running Redis or Node processes first.**
+
+If you have been running the app manually (e.g. from earlier phases), you may have background containers or processes that will conflict with the Compose stack:
+
+- **Stale Redis container** — if Redis was started manually with `docker run -p 6379:6379 redis:7-alpine`, that container continues holding host port 6379 even after you stop your local Node process. Compose's own Redis service intentionally has *no* host port published, but the stale container will:
+  - Cause a port-conflict error when Compose tries to start.
+  - OR (if the conflict doesn't error) make port 6379 appear reachable from the host — falsely suggesting Redis is exposed, when in fact the Compose Redis is correctly isolated.
+
+  This exact scenario was observed during Phase 4 verification: a container named `dazzling_newton` (started in Phase 2/3 development) was still running and holding port 6379 alongside the Compose stack.
+
+- **Stale Node process** — if a local `npm start` server is still running, it will hold port 3000 and block the Compose app nodes from starting.
+
+**Clean-up commands before `docker compose up`:**
+
+```bash
+# Stop any manually-started Redis container (adjust name if different)
+docker stop dazzling_newton 2>/dev/null || true
+
+# Or stop ALL running containers not managed by this Compose project
+docker ps --filter status=running --format '{{.Names}}' | grep -v solution | xargs -r docker stop
+
+# Kill any local Node process holding port 3000
+# Windows (PowerShell):
+Get-Process -Name node -ErrorAction SilentlyContinue | Stop-Process -Force
+# macOS/Linux:
+pkill -f "node src/server.js" || true
+```
+
+After cleanup, verify port 6379 is free before starting:
+```bash
+# Should print nothing (no listener) if the port is clear
+docker ps --filter publish=6379
+```
+
 ## Install & run
 
 ```bash

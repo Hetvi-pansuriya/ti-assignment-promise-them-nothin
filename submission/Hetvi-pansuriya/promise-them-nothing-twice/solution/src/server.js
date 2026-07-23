@@ -3,7 +3,27 @@ import { checkRedisHealth } from './redis/client.js';
 import { rateLimiter } from './middleware/rateLimiter.js';
 
 const app = express();
-const PORT = parseInt(process.env.PORT ?? '3000', 10);
+const PORT   = parseInt(process.env.PORT   ?? '3000', 10);
+const NODE_ID = process.env.NODE_ID ?? 'unknown';
+
+// ---------------------------------------------------------------------------
+// Global middleware
+// ---------------------------------------------------------------------------
+
+/**
+ * X-Served-By — echoes the NODE_ID environment variable on every response.
+ *
+ * Applied before any route handler so it covers all endpoints unconditionally,
+ * including /api/v1/ping (rate-limited), /api/v1/health/redis, and any future
+ * routes added in later phases.
+ *
+ * Falls back to "unknown" when NODE_ID is not set, keeping local (non-Docker)
+ * development runs working exactly as before.
+ */
+app.use((_req, res, next) => {
+  res.set('X-Served-By', NODE_ID);
+  next();
+});
 
 // ---------------------------------------------------------------------------
 // Routes
