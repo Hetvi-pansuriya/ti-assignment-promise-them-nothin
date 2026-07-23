@@ -1,5 +1,6 @@
 import express from 'express';
 import { checkRedisHealth } from './redis/client.js';
+import { rateLimiter } from './middleware/rateLimiter.js';
 
 const app = express();
 const PORT = parseInt(process.env.PORT ?? '3000', 10);
@@ -10,9 +11,11 @@ const PORT = parseInt(process.env.PORT ?? '3000', 10);
 
 /**
  * GET /api/v1/ping
- * Simple liveness check — no external dependencies, always fast.
+ * Liveness check — protected by rate limiting (Phase 3).
+ * The rateLimiter middleware runs before this handler and enforces per-customer
+ * sliding-window limits. The route handler itself is unchanged from Phase 2.
  */
-app.get('/api/v1/ping', (_req, res) => {
+app.get('/api/v1/ping', rateLimiter, (_req, res) => {
   res.status(200).json({
     status: 'ok',
     service: 'relayapi',
@@ -23,9 +26,10 @@ app.get('/api/v1/ping', (_req, res) => {
 /**
  * GET /api/v1/health/redis
  * Verifies that the server can reach Redis.
- * Returns 200 when Redis responds to PING, 503 otherwise.
- * This route exists to confirm Redis connectivity in isolation before any
- * rate-limit logic is layered on top in a later phase.
+ * Intentionally NOT rate-limited: this endpoint must always be reachable
+ * regardless of rate-limit state so that Redis connectivity can be checked
+ * in isolation (including during a Redis outage where the limiter would
+ * itself fail open).
  */
 app.get('/api/v1/health/redis', async (_req, res) => {
   const health = await checkRedisHealth();

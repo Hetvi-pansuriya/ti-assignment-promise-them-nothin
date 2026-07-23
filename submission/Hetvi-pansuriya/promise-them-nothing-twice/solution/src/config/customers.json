@@ -1,0 +1,48 @@
+{
+  "tiers": {
+    "starter": { "rpm": 60 },
+    "growth":  { "rpm": 300 }
+  },
+  "customers": {
+    "northwind": {
+      "tier": "growth",
+      "contractedRpm": 300,
+      "overrides": [
+        {
+          "name": "nightly_batch_capacity",
+          "reason": "Contracted nightly batch ETL job consistently generates 800-1200 RPM between 02:00-04:00 UTC. Approved exception.",
+          "effectiveRpm": 1200,
+          "window": { "startUtc": "02:00", "endUtc": "04:00" },
+          "owner": "platform-team",
+          "reviewDate": "2026-12-31",
+          "active": true
+        }
+      ]
+    },
+    "test-starter-customer": {
+      "tier": "starter",
+      "contractedRpm": 60,
+      "overrides": []
+    },
+    "test-growth-customer": {
+      "tier": "growth",
+      "contractedRpm": 300,
+      "overrides": []
+    },
+    "test-flat-override-customer": {
+      "tier": "growth",
+      "contractedRpm": 300,
+      "overrides": [
+        {
+          "name": "negotiated_enterprise_flat",
+          "reason": "Negotiated enterprise contract amendment granting sustained 500 RPM with no time window restriction.",
+          "effectiveRpm": 500,
+          "window": { "startUtc": "00:00", "endUtc": "23:59" },
+          "owner": "sales-team",
+          "reviewDate": "2026-12-31",
+          "active": true
+        }
+      ]
+    }
+  }
+}
