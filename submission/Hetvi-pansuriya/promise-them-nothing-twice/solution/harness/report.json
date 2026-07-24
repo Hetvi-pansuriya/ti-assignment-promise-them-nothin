@@ -1,0 +1,344 @@
+{
+  "runAt": "2026-07-24T03:26:55.584Z",
+  "scenarios": [
+    {
+      "name": "Scenario 1 — Exact quota-boundary enforcement",
+      "status": "PASS",
+      "partA": {
+        "sent": 61,
+        "allowed": 60,
+        "expectedAllowed": 60,
+        "first429At": 61,
+        "retryAfter": "4",
+        "ratelimitHeaders": {
+          "limit": "60",
+          "remaining": "0"
+        },
+        "pass": true
+      },
+      "partB": {
+        "preBoundary": {
+          "sent": 40,
+          "allowed": 40
+        },
+        "postBoundary": {
+          "sent": 30,
+          "allowed": 21,
+          "denied": 9,
+          "firstDenialRetryAfter": "1"
+        },
+        "slidingWindowApplied": true,
+        "pass": true
+      }
+    },
+    {
+      "name": "Scenario 2 — Fairness between same-tier customers",
+      "status": "PASS",
+      "tier": "growth",
+      "customerA": {
+        "id": "test-growth-customer",
+        "effectiveLimit": 300,
+        "sent": 300,
+        "total": 300,
+        "allowed": 300,
+        "denied": 0,
+        "errors": 0
+      },
+      "customerB": {
+        "id": "test-flat-override-customer",
+        "effectiveLimit": 500,
+        "sent": 500,
+        "total": 500,
+        "allowed": 500,
+        "denied": 0,
+        "errors": 0
+      },
+      "totalSent": 800,
+      "eachGotFullQuotaAccepted": true,
+      "note": "Both customers accepted 100% of their own quota concurrently with 0 denials"
+    },
+    {
+      "name": "Scenario 3 — Isolation between customers",
+      "status": "PASS",
+      "heavy": {
+        "id": "test-starter-customer",
+        "limit": 60,
+        "sent": 300,
+        "total": 300,
+        "allowed": 60,
+        "denied": 240,
+        "errors": 0
+      },
+      "light": {
+        "id": "test-growth-customer",
+        "limit": 300,
+        "sent": 20,
+        "total": 20,
+        "allowed": 20,
+        "denied": 0,
+        "errors": 0,
+        "isolationHolds": true,
+        "fullResponseLog": [
+          {
+            "req": 1,
+            "timestamp": "2026-07-24T03:28:03.496Z",
+            "status": 200,
+            "servedBy": "node-c",
+            "remaining": "294"
+          },
+          {
+            "req": 2,
+            "timestamp": "2026-07-24T03:28:03.496Z",
+            "status": 200,
+            "servedBy": "node-c",
+            "remaining": "291"
+          },
+          {
+            "req": 3,
+            "timestamp": "2026-07-24T03:28:03.496Z",
+            "status": 200,
+            "servedBy": "node-b",
+            "remaining": "289"
+          },
+          {
+            "req": 4,
+            "timestamp": "2026-07-24T03:28:03.496Z",
+            "status": 200,
+            "servedBy": "node-b",
+            "remaining": "288"
+          },
+          {
+            "req": 5,
+            "timestamp": "2026-07-24T03:28:03.496Z",
+            "status": 200,
+            "servedBy": "node-a",
+            "remaining": "299"
+          },
+          {
+            "req": 6,
+            "timestamp": "2026-07-24T03:28:03.496Z",
+            "status": 200,
+            "servedBy": "node-c",
+            "remaining": "293"
+          },
+          {
+            "req": 7,
+            "timestamp": "2026-07-24T03:28:03.497Z",
+            "status": 200,
+            "servedBy": "node-a",
+            "remaining": "298"
+          },
+          {
+            "req": 8,
+            "timestamp": "2026-07-24T03:28:03.497Z",
+            "status": 200,
+            "servedBy": "node-c",
+            "remaining": "286"
+          },
+          {
+            "req": 9,
+            "timestamp": "2026-07-24T03:28:03.497Z",
+            "status": 200,
+            "servedBy": "node-a",
+            "remaining": "296"
+          },
+          {
+            "req": 10,
+            "timestamp": "2026-07-24T03:28:03.497Z",
+            "status": 200,
+            "servedBy": "node-b",
+            "remaining": "283"
+          },
+          {
+            "req": 11,
+            "timestamp": "2026-07-24T03:28:03.497Z",
+            "status": 200,
+            "servedBy": "node-a",
+            "remaining": "297"
+          },
+          {
+            "req": 12,
+            "timestamp": "2026-07-24T03:28:03.497Z",
+            "status": 200,
+            "servedBy": "node-b",
+            "remaining": "282"
+          },
+          {
+            "req": 13,
+            "timestamp": "2026-07-24T03:28:03.497Z",
+            "status": 200,
+            "servedBy": "node-b",
+            "remaining": "287"
+          },
+          {
+            "req": 14,
+            "timestamp": "2026-07-24T03:28:03.497Z",
+            "status": 200,
+            "servedBy": "node-a",
+            "remaining": "295"
+          },
+          {
+            "req": 15,
+            "timestamp": "2026-07-24T03:28:03.498Z",
+            "status": 200,
+            "servedBy": "node-b",
+            "remaining": "280"
+          },
+          {
+            "req": 16,
+            "timestamp": "2026-07-24T03:28:03.498Z",
+            "status": 200,
+            "servedBy": "node-c",
+            "remaining": "292"
+          },
+          {
+            "req": 17,
+            "timestamp": "2026-07-24T03:28:03.498Z",
+            "status": 200,
+            "servedBy": "node-c",
+            "remaining": "285"
+          },
+          {
+            "req": 18,
+            "timestamp": "2026-07-24T03:28:03.498Z",
+            "status": 200,
+            "servedBy": "node-a",
+            "remaining": "290"
+          },
+          {
+            "req": 19,
+            "timestamp": "2026-07-24T03:28:03.498Z",
+            "status": 200,
+            "servedBy": "node-c",
+            "remaining": "284"
+          },
+          {
+            "req": 20,
+            "timestamp": "2026-07-24T03:28:03.498Z",
+            "status": 200,
+            "servedBy": "node-b",
+            "remaining": "281"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Scenario 4 — Randomized traffic across all 3 nodes",
+      "status": "PASS",
+      "customer": "test-growth-customer",
+      "limit": 300,
+      "sent": 90,
+      "total": 90,
+      "allowed": 90,
+      "denied": 0,
+      "errors": 0,
+      "nodeDistribution": {
+        "node-a": 29,
+        "node-b": 30,
+        "node-c": 31
+      },
+      "allThreeNodesServedRequests": true,
+      "aggregateMatchesSingleNodeBehavior": true,
+      "note": "90 requests < limit 300 → all should be allowed across all 3 nodes combined"
+    },
+    {
+      "name": "Scenario 5 — Race condition: simultaneous fan-out across nodes",
+      "status": "PASS",
+      "customer": "test-starter-customer",
+      "limit": 60,
+      "perNode": 25,
+      "totalSent": 75,
+      "totalAllowed": 60,
+      "total429": 15,
+      "limitExceeded": false,
+      "atomicLuaPreventedRaceCondition": true
+    },
+    {
+      "name": "Scenario 6 — Unknown customer path",
+      "status": "PASS",
+      "noHeaderRequest": {
+        "status": 401,
+        "expected": 401,
+        "body": {
+          "error": "missing_customer_id",
+          "message": "X-Customer-Id header is required."
+        },
+        "pass": true
+      },
+      "unknownCustomer": {
+        "id": "no-such-customer-zzz-9999",
+        "status": 403,
+        "expected": 403,
+        "body": {
+          "error": "unknown_customer",
+          "message": "Customer ID \"no-such-customer-zzz-9999\" is not recognized. Contact support."
+        },
+        "pass": true
+      },
+      "redisKeyCheck": {
+        "command": "docker exec solution-redis-1 redis-cli KEYS \"ratelimit:no-such-customer-zzz-9999:*\"",
+        "pattern": "ratelimit:no-such-customer-zzz-9999:*",
+        "keysFound": [],
+        "noKeyCreated": true,
+        "note": "Checked via docker exec because Redis port is not published to host (Phase 4 design)",
+        "pass": true
+      }
+    },
+    {
+      "name": "Scenario 7 — Northwind nightly-batch scenario",
+      "status": "PASS",
+      "currentUtc": "03:28",
+      "originalWindow": {
+        "startUtc": "02:00",
+        "endUtc": "04:00"
+      },
+      "mockActiveWindow": {
+        "startUtc": "00:00",
+        "endUtc": "23:59"
+      },
+      "mockInactiveWindow": {
+        "startUtc": "09:00",
+        "endUtc": "11:00"
+      },
+      "partA": {
+        "description": "Override active (00:00–23:59): 400 reqs above base but below override",
+        "sent": 400,
+        "total": 400,
+        "allowed": 400,
+        "denied": 0,
+        "errors": 0,
+        "expectedZeroDenied": true,
+        "pass": true
+      },
+      "partB": {
+        "description": "Override inactive (09:00–11:00): same load against base=300",
+        "sent": 400,
+        "total": 400,
+        "allowed": 300,
+        "denied": 100,
+        "errors": 0,
+        "expectedDenialsAfterBaseLimit": true,
+        "pass": true
+      },
+      "customersJsonRestored": {
+        "window": {
+          "startUtc": "02:00",
+          "endUtc": "04:00"
+        },
+        "expectedWindow": {
+          "startUtc": "02:00",
+          "endUtc": "04:00"
+        },
+        "confirmed": true
+      }
+    }
+  ],
+  "pass": 7,
+  "fail": 0,
+  "completedAt": "2026-07-24T03:29:07.449Z",
+  "summary": {
+    "totalScenarios": 7,
+    "passed": 7,
+    "failed": 0
+  }
+}
