@@ -25,5 +25,10 @@ COPY src/ ./src/
 # EXPOSE is documentation-only; the actual host binding is in docker-compose.yml.
 EXPOSE 3000
 
+# Drop to the built-in non-root 'node' user (UID 1000) provided by node:20-alpine.
+# Running as root inside a container is a security hazard — if an attacker gains
+# control of the process, they would have root privileges over the container.
+USER node
+
 # Same start command as local development (`npm start` → `node src/server.js`)
 CMD ["npm", "start"]

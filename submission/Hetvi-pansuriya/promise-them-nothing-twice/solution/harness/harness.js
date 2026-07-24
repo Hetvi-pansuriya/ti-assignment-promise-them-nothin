@@ -14,7 +14,7 @@
  * Output: harness/report.json
  */
 
-import { execSync }                               from 'child_process';
+import { execSync, execFileSync }                 from 'child_process';
 import { readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { join, dirname }                          from 'path';
 import { fileURLToPath }                          from 'url';
@@ -53,8 +53,11 @@ function flushRedis() {
 
 function redisKeys(pattern) {
   try {
-    const raw = execSync(
-      `docker exec ${REDIS_CTR} redis-cli KEYS "${pattern}"`,
+    // Use execFileSync (not execSync) so 'pattern' is passed as a literal process
+    // argument — no shell is invoked, eliminating any shell-injection risk.
+    const raw = execFileSync(
+      'docker',
+      ['exec', REDIS_CTR, 'redis-cli', 'KEYS', pattern],
       { stdio: 'pipe' }
     ).toString().trim();
     // redis-cli in non-interactive mode returns empty string when no keys match
