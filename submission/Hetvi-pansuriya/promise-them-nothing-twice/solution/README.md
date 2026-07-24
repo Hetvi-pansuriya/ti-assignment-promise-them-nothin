@@ -1,135 +1,156 @@
-# RelayAPI — Phase 2: Project Scaffolding + API Skeleton
+# RelayAPI — Distributed Rate Limiter
 
-> ⚠️ **Work in Progress** — This is Phase 2 of an incremental build. Rate limiting, customer config, Docker Compose orchestration, and the load-testing harness are **not yet implemented**.
+A metered HTTP API platform with per-customer rate limiting, built as a
+system-design exercise resolving a conflict between hard enforcement
+(CTO) and zero-downtime for a key customer's traffic pattern (Head of
+Support). See [`DECISIONS.md`](../DECISIONS.md) for the full reasoning
+behind every design choice below.
 
----
+## How it works, briefly
 
-## What exists in this phase
+- Three stateless Express nodes (`app-node-a/b/c`) sit behind an nginx
+  reverse proxy doing plain round-robin, with no sticky sessions.
+- All rate-limit state lives in Redis — the only thing all three nodes
+  share. No node ever makes an allow/deny decision from its own memory.
+- Rate limiting uses a **sliding window counter** (current + previous
+  60-second bucket, weighted by elapsed time), evaluated atomically
+  inside a single Redis Lua script that uses Redis's own `TIME` command
+  as its sole source of "now" — never an app node's system clock.
+- Customer tiers and one named, time-bound override (for a customer
+  whose contracted quota doesn't match its real nightly batch traffic)
+  live entirely in `src/config/customers.json` — the rate-limiting
+  engine has no customer-specific code, only numbers read from config.
 
-| Endpoint | Description |
-|---|---|
-| `GET /api/v1/ping` | Liveness check — confirms the server is alive |
-| `GET /api/v1/health/redis` | Connectivity check — confirms Redis is reachable |
+## Running it
 
-**No rate limiting exists yet.** The `src/middleware/` and `src/config/` directories are intentionally empty stubs for later phases.
-
----
-
-## Module system
-
-This project uses **ES Modules** (`"type": "module"` in `package.json`). All files use `import`/`export` syntax — no `require()`.
-
----
-
-## Project structure
-
-```
-solution/
-├── package.json
-├── .gitignore
-├── README.md          ← you are here
-└── src/
-    ├── server.js          # Express app + route definitions
-    ├── middleware/         # Empty — rate-limit middleware (later phase)
-    ├── redis/
-    │   └── client.js      # ioredis client + checkRedisHealth()
-    └── config/            # Empty — customer config loader (later phase)
-```
-
----
-
-## Prerequisites
-
-- **Node.js ≥ 18**
-- **Redis running locally on port 6379** before starting the server.
-
-Redis is not yet orchestrated via Docker Compose (that's a later phase). For now, start it manually with Docker:
+**Primary path — full 3-node deployment via Docker Compose:**
 
 ```bash
-docker run --rm -p 6379:6379 redis:7-alpine
+docker-compose up --build
 ```
 
-> Full Docker Compose setup (Redis + 3 app nodes + load balancer) is a later phase and not yet present in this repo.
+This starts Redis, all three app nodes, and the nginx reverse proxy.
 
----
+> ⚠️ **Stop any locally-running Redis or Node processes first**, if you've
+> run this project manually before. A stale container holding host port
+> 6379 or 3000 (e.g. from earlier manual testing with
+> `docker run -p 6379:6379 redis:7-alpine`) can cause a port conflict or
+> falsely make Redis appear reachable from the host. Clean up first:
+>
+> ```bash
+> docker ps --filter status=running --format '{{.Names}}' | grep -v solution | xargs -r docker stop
+> # Windows: Get-Process -Name node -ErrorAction SilentlyContinue | Stop-Process -Force
+> # macOS/Linux: pkill -f "node src/server.js" || true
+> ```
 
-## Before running `docker compose up`
-
-> ⚠️ **Stop any locally-running Redis or Node processes first.**
-
-If you have been running the app manually (e.g. from earlier phases), you may have background containers or processes that will conflict with the Compose stack:
-
-- **Stale Redis container** — if Redis was started manually with `docker run -p 6379:6379 redis:7-alpine`, that container continues holding host port 6379 even after you stop your local Node process. Compose's own Redis service intentionally has *no* host port published, but the stale container will:
-  - Cause a port-conflict error when Compose tries to start.
-  - OR (if the conflict doesn't error) make port 6379 appear reachable from the host — falsely suggesting Redis is exposed, when in fact the Compose Redis is correctly isolated.
-
-  This exact scenario was observed during Phase 4 verification: a container named `dazzling_newton` (started in Phase 2/3 development) was still running and holding port 6379 alongside the Compose stack.
-
-- **Stale Node process** — if a local `npm start` server is still running, it will hold port 3000 and block the Compose app nodes from starting.
-
-**Clean-up commands before `docker compose up`:**
+**Alternative — single local process (no Docker Compose, for quick checks):**
 
 ```bash
-# Stop any manually-started Redis container (adjust name if different)
-docker stop dazzling_newton 2>/dev/null || true
-
-# Or stop ALL running containers not managed by this Compose project
-docker ps --filter status=running --format '{{.Names}}' | grep -v solution | xargs -r docker stop
-
-# Kill any local Node process holding port 3000
-# Windows (PowerShell):
-Get-Process -Name node -ErrorAction SilentlyContinue | Stop-Process -Force
-# macOS/Linux:
-pkill -f "node src/server.js" || true
-```
-
-After cleanup, verify port 6379 is free before starting:
-```bash
-# Should print nothing (no listener) if the port is clear
-docker ps --filter publish=6379
-```
-
-## Install & run
-
-```bash
-# Install dependencies
+docker run --rm -p 6379:6379 redis:7-alpine   # Redis
 npm install
-
-# Start the server (defaults to port 3000)
-npm start
-
-# Use a custom port
-PORT=4000 npm start
+npm start                                      # defaults to port 3000
 ```
 
----
+## Endpoints
+
+| Endpoint | Rate-limited? | Description |
+|---|---|---|
+| `GET /api/v1/ping` | Yes | Liveness check; subject to the caller's rate limit |
+| `GET /api/v1/health/redis` | No | Redis connectivity check — always available regardless of rate-limit state |
+
+Every response carries an `X-Served-By` header naming which node
+(`node-a`/`node-b`/`node-c`) handled it, so you can confirm traffic is
+really being distributed.
+
+**On an allowed request**, `/api/v1/ping` returns `200` with:
+- `X-RateLimit-Limit` — the caller's effective limit
+- `X-RateLimit-Remaining` — requests left in the current window
+- `X-RateLimit-Reset` — unix timestamp when the next window starts
+
+**On a denied request**, it returns `429` with the same three headers
+plus:
+- `Retry-After` — seconds until a retry will actually succeed (computed
+  from the real sliding-window state, not a fixed constant)
+- A JSON body naming the limit that was hit and the reset time
+
+**Identity and errors:**
+- Missing `X-Customer-Id` header → `401`
+- `X-Customer-Id` not present in `customers.json` → `403` (and creates
+  no Redis state for that identity — rejected outright, never silently
+  defaulted to a tier)
+
+## Ports (Docker Compose)
+
+| Service | Host port | Purpose |
+|---|---|---|
+| Reverse proxy (nginx) | `8080` | **Normal traffic path** — round-robin across all 3 nodes |
+| `app-node-a` | `3001` | Direct access to this specific node (testing only) |
+| `app-node-b` | `3002` | Direct access to this specific node (testing only) |
+| `app-node-c` | `3003` | Direct access to this specific node (testing only) |
+| Redis | *(none — internal network only)* | Not reachable from the host by design |
+
+The per-node ports exist so the load-testing harness's race-condition
+scenario can fan requests out to specific nodes directly — they are not
+the normal traffic path.
 
 ## Environment variables
 
 | Variable | Default | Description |
 |---|---|---|
-| `PORT` | `3000` | Port the Express server listens on |
-| `REDIS_HOST` | `localhost` | Redis hostname |
+| `PORT` | `3000` | Port the Express server listens on inside its container |
+| `REDIS_HOST` | `localhost` | Redis hostname (Compose sets this to `redis`) |
 | `REDIS_PORT` | `6379` | Redis port |
+| `NODE_ID` | `unknown` | Identifies this instance in the `X-Served-By` header |
 
----
+## Customer configuration
 
-## Testing the endpoints
+Tiers and customers are defined in `src/config/customers.json`:
+
+- **Starter** — 60 RPM
+- **Growth** — 300 RPM
+- Named customers can have a flat override (a negotiated custom limit)
+  or a time-bound override (active only within a defined UTC window).
+  Every override must include `reason`, `owner`, and `reviewDate` —
+  the app fails to start if any of these are missing, so an
+  undocumented exception can never silently load.
+
+Config is loaded once at startup and is **not** hot-reloaded across the
+three nodes — see `DECISIONS.md` for why, and what a production fix
+would look like.
+
+## Load-testing harness
 
 ```bash
-# Liveness ping
-curl http://localhost:3000/api/v1/ping
-
-# Redis health (Redis must be running)
-curl http://localhost:3000/api/v1/health/redis
+node harness/harness.js
 ```
 
----
+Runs 7 scenarios against the live Docker Compose stack — exact
+quota-boundary enforcement, same-tier fairness under full concurrent
+load, cross-customer isolation, multi-node distribution, a cross-node
+race-condition regression test, the unknown-customer path, and the
+nightly-batch override scenario. Writes a structured report to
+`harness/report.json` in addition to console output. The stack must
+already be running (`docker-compose up`) before you run the harness.
 
-## What comes next (later phases)
+## Project structure
 
-- Sliding-window rate limiter via atomic Lua script in Redis
-- Per-customer config loader (`src/config/`)
-- Rate-limit middleware (`src/middleware/`)
-- Docker Compose with 3 app nodes + nginx round-robin LB
-- Load-testing harness
+```
+solution/
+├── Dockerfile
+├── docker-compose.yml
+├── nginx/
+│   └── nginx.conf
+├── package.json
+├── harness/
+│   ├── harness.js
+│   └── report.json
+└── src/
+    ├── server.js
+    ├── config/
+    │   ├── index.js
+    │   └── customers.json
+    ├── middleware/
+    │   └── rateLimiter.js
+    └── redis/
+        └── client.js
+```
