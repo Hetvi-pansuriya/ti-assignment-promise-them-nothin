@@ -1,5 +1,5 @@
 {
-  "runAt": "2026-07-24T03:46:25.570Z",
+  "runAt": "2026-07-24T04:10:33.063Z",
   "scenarios": [
     {
       "name": "Scenario 1 — Exact quota-boundary enforcement",
@@ -9,7 +9,7 @@
         "allowed": 60,
         "expectedAllowed": 60,
         "first429At": 61,
-        "retryAfter": "34",
+        "retryAfter": "27",
         "ratelimitHeaders": {
           "limit": "60",
           "remaining": "0"
@@ -81,143 +81,143 @@
         "fullResponseLog": [
           {
             "req": 1,
-            "timestamp": "2026-07-24T03:47:04.160Z",
-            "status": 200,
-            "servedBy": "node-a",
-            "remaining": "292"
-          },
-          {
-            "req": 2,
-            "timestamp": "2026-07-24T03:47:04.160Z",
-            "status": 200,
-            "servedBy": "node-b",
-            "remaining": "294"
-          },
-          {
-            "req": 3,
-            "timestamp": "2026-07-24T03:47:04.160Z",
-            "status": 200,
-            "servedBy": "node-b",
-            "remaining": "297"
-          },
-          {
-            "req": 4,
-            "timestamp": "2026-07-24T03:47:04.160Z",
-            "status": 200,
-            "servedBy": "node-c",
-            "remaining": "289"
-          },
-          {
-            "req": 5,
-            "timestamp": "2026-07-24T03:47:04.160Z",
-            "status": 200,
-            "servedBy": "node-b",
-            "remaining": "298"
-          },
-          {
-            "req": 6,
-            "timestamp": "2026-07-24T03:47:04.161Z",
-            "status": 200,
-            "servedBy": "node-a",
-            "remaining": "291"
-          },
-          {
-            "req": 7,
-            "timestamp": "2026-07-24T03:47:04.161Z",
-            "status": 200,
-            "servedBy": "node-b",
-            "remaining": "296"
-          },
-          {
-            "req": 8,
-            "timestamp": "2026-07-24T03:47:04.161Z",
-            "status": 200,
-            "servedBy": "node-a",
-            "remaining": "286"
-          },
-          {
-            "req": 9,
-            "timestamp": "2026-07-24T03:47:04.161Z",
-            "status": 200,
-            "servedBy": "node-c",
-            "remaining": "288"
-          },
-          {
-            "req": 10,
-            "timestamp": "2026-07-24T03:47:04.161Z",
-            "status": 200,
-            "servedBy": "node-a",
-            "remaining": "290"
-          },
-          {
-            "req": 11,
-            "timestamp": "2026-07-24T03:47:04.161Z",
-            "status": 200,
-            "servedBy": "node-c",
-            "remaining": "283"
-          },
-          {
-            "req": 12,
-            "timestamp": "2026-07-24T03:47:04.161Z",
+            "timestamp": "2026-07-24T04:11:04.125Z",
             "status": 200,
             "servedBy": "node-b",
             "remaining": "299"
           },
           {
-            "req": 13,
-            "timestamp": "2026-07-24T03:47:04.162Z",
+            "req": 2,
+            "timestamp": "2026-07-24T04:11:04.125Z",
+            "status": 200,
+            "servedBy": "node-c",
+            "remaining": "295"
+          },
+          {
+            "req": 3,
+            "timestamp": "2026-07-24T04:11:04.125Z",
+            "status": 200,
+            "servedBy": "node-b",
+            "remaining": "296"
+          },
+          {
+            "req": 4,
+            "timestamp": "2026-07-24T04:11:04.126Z",
+            "status": 200,
+            "servedBy": "node-c",
+            "remaining": "286"
+          },
+          {
+            "req": 5,
+            "timestamp": "2026-07-24T04:11:04.126Z",
+            "status": 200,
+            "servedBy": "node-a",
+            "remaining": "281"
+          },
+          {
+            "req": 6,
+            "timestamp": "2026-07-24T04:11:04.126Z",
+            "status": 200,
+            "servedBy": "node-b",
+            "remaining": "289"
+          },
+          {
+            "req": 7,
+            "timestamp": "2026-07-24T04:11:04.126Z",
             "status": 200,
             "servedBy": "node-c",
             "remaining": "285"
           },
           {
-            "req": 14,
-            "timestamp": "2026-07-24T03:47:04.162Z",
+            "req": 8,
+            "timestamp": "2026-07-24T04:11:04.126Z",
             "status": 200,
             "servedBy": "node-a",
+            "remaining": "280"
+          },
+          {
+            "req": 9,
+            "timestamp": "2026-07-24T04:11:04.127Z",
+            "status": 200,
+            "servedBy": "node-b",
             "remaining": "287"
           },
           {
-            "req": 15,
-            "timestamp": "2026-07-24T03:47:04.162Z",
+            "req": 10,
+            "timestamp": "2026-07-24T04:11:04.127Z",
+            "status": 200,
+            "servedBy": "node-c",
+            "remaining": "298"
+          },
+          {
+            "req": 11,
+            "timestamp": "2026-07-24T04:11:04.127Z",
+            "status": 200,
+            "servedBy": "node-a",
+            "remaining": "290"
+          },
+          {
+            "req": 12,
+            "timestamp": "2026-07-24T04:11:04.127Z",
+            "status": 200,
+            "servedBy": "node-b",
+            "remaining": "297"
+          },
+          {
+            "req": 13,
+            "timestamp": "2026-07-24T04:11:04.127Z",
+            "status": 200,
+            "servedBy": "node-c",
+            "remaining": "293"
+          },
+          {
+            "req": 14,
+            "timestamp": "2026-07-24T04:11:04.127Z",
             "status": 200,
             "servedBy": "node-a",
             "remaining": "284"
           },
           {
-            "req": 16,
-            "timestamp": "2026-07-24T03:47:04.162Z",
+            "req": 15,
+            "timestamp": "2026-07-24T04:11:04.128Z",
             "status": 200,
             "servedBy": "node-b",
-            "remaining": "295"
+            "remaining": "294"
+          },
+          {
+            "req": 16,
+            "timestamp": "2026-07-24T04:11:04.128Z",
+            "status": 200,
+            "servedBy": "node-c",
+            "remaining": "291"
           },
           {
             "req": 17,
-            "timestamp": "2026-07-24T03:47:04.162Z",
+            "timestamp": "2026-07-24T04:11:04.128Z",
             "status": 200,
-            "servedBy": "node-c",
-            "remaining": "281"
+            "servedBy": "node-a",
+            "remaining": "283"
           },
           {
             "req": 18,
-            "timestamp": "2026-07-24T03:47:04.162Z",
+            "timestamp": "2026-07-24T04:11:04.128Z",
             "status": 200,
-            "servedBy": "node-a",
-            "remaining": "282"
+            "servedBy": "node-b",
+            "remaining": "292"
           },
           {
             "req": 19,
-            "timestamp": "2026-07-24T03:47:04.162Z",
+            "timestamp": "2026-07-24T04:11:04.128Z",
             "status": 200,
-            "servedBy": "node-b",
-            "remaining": "293"
+            "servedBy": "node-c",
+            "remaining": "288"
           },
           {
             "req": 20,
-            "timestamp": "2026-07-24T03:47:04.163Z",
+            "timestamp": "2026-07-24T04:11:04.128Z",
             "status": 200,
-            "servedBy": "node-c",
-            "remaining": "280"
+            "servedBy": "node-a",
+            "remaining": "282"
           }
         ]
       }
@@ -233,9 +233,9 @@
       "denied": 0,
       "errors": 0,
       "nodeDistribution": {
-        "node-c": 29,
-        "node-b": 35,
-        "node-a": 26
+        "node-b": 32,
+        "node-a": 28,
+        "node-c": 30
       },
       "allThreeNodesServedRequests": true,
       "aggregateMatchesSingleNodeBehavior": true,
@@ -287,7 +287,7 @@
     {
       "name": "Scenario 7 — Northwind nightly-batch scenario",
       "status": "PASS",
-      "currentUtc": "03:47",
+      "currentUtc": "04:11",
       "originalWindow": {
         "startUtc": "02:00",
         "endUtc": "04:00"
@@ -297,8 +297,8 @@
         "endUtc": "23:59"
       },
       "mockInactiveWindow": {
-        "startUtc": "09:00",
-        "endUtc": "11:00"
+        "startUtc": "10:00",
+        "endUtc": "12:00"
       },
       "partA": {
         "description": "Override active (00:00–23:59): 400 reqs above base but below override",
@@ -311,7 +311,7 @@
         "pass": true
       },
       "partB": {
-        "description": "Override inactive (09:00–11:00): same load against base=300",
+        "description": "Override inactive (10:00–12:00): same load against base=300",
         "sent": 400,
         "total": 400,
         "allowed": 300,
@@ -335,7 +335,7 @@
   ],
   "pass": 7,
   "fail": 0,
-  "completedAt": "2026-07-24T03:48:03.532Z",
+  "completedAt": "2026-07-24T04:12:04.647Z",
   "summary": {
     "totalScenarios": 7,
     "passed": 7,
