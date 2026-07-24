@@ -1,5 +1,5 @@
 {
-  "runAt": "2026-07-24T03:26:55.584Z",
+  "runAt": "2026-07-24T03:46:25.570Z",
   "scenarios": [
     {
       "name": "Scenario 1 — Exact quota-boundary enforcement",
@@ -9,7 +9,7 @@
         "allowed": 60,
         "expectedAllowed": 60,
         "first429At": 61,
-        "retryAfter": "4",
+        "retryAfter": "34",
         "ratelimitHeaders": {
           "limit": "60",
           "remaining": "0"
@@ -23,9 +23,9 @@
         },
         "postBoundary": {
           "sent": 30,
-          "allowed": 21,
-          "denied": 9,
-          "firstDenialRetryAfter": "1"
+          "allowed": 22,
+          "denied": 8,
+          "firstDenialRetryAfter": "2"
         },
         "slidingWindowApplied": true,
         "pass": true
@@ -81,143 +81,143 @@
         "fullResponseLog": [
           {
             "req": 1,
-            "timestamp": "2026-07-24T03:28:03.496Z",
+            "timestamp": "2026-07-24T03:47:04.160Z",
             "status": 200,
-            "servedBy": "node-c",
-            "remaining": "294"
+            "servedBy": "node-a",
+            "remaining": "292"
           },
           {
             "req": 2,
-            "timestamp": "2026-07-24T03:28:03.496Z",
+            "timestamp": "2026-07-24T03:47:04.160Z",
             "status": 200,
-            "servedBy": "node-c",
-            "remaining": "291"
+            "servedBy": "node-b",
+            "remaining": "294"
           },
           {
             "req": 3,
-            "timestamp": "2026-07-24T03:28:03.496Z",
+            "timestamp": "2026-07-24T03:47:04.160Z",
             "status": 200,
             "servedBy": "node-b",
-            "remaining": "289"
+            "remaining": "297"
           },
           {
             "req": 4,
-            "timestamp": "2026-07-24T03:28:03.496Z",
+            "timestamp": "2026-07-24T03:47:04.160Z",
             "status": 200,
-            "servedBy": "node-b",
-            "remaining": "288"
+            "servedBy": "node-c",
+            "remaining": "289"
           },
           {
             "req": 5,
-            "timestamp": "2026-07-24T03:28:03.496Z",
+            "timestamp": "2026-07-24T03:47:04.160Z",
             "status": 200,
-            "servedBy": "node-a",
-            "remaining": "299"
-          },
-          {
-            "req": 6,
-            "timestamp": "2026-07-24T03:28:03.496Z",
-            "status": 200,
-            "servedBy": "node-c",
-            "remaining": "293"
-          },
-          {
-            "req": 7,
-            "timestamp": "2026-07-24T03:28:03.497Z",
-            "status": 200,
-            "servedBy": "node-a",
+            "servedBy": "node-b",
             "remaining": "298"
           },
           {
-            "req": 8,
-            "timestamp": "2026-07-24T03:28:03.497Z",
+            "req": 6,
+            "timestamp": "2026-07-24T03:47:04.161Z",
             "status": 200,
-            "servedBy": "node-c",
+            "servedBy": "node-a",
+            "remaining": "291"
+          },
+          {
+            "req": 7,
+            "timestamp": "2026-07-24T03:47:04.161Z",
+            "status": 200,
+            "servedBy": "node-b",
+            "remaining": "296"
+          },
+          {
+            "req": 8,
+            "timestamp": "2026-07-24T03:47:04.161Z",
+            "status": 200,
+            "servedBy": "node-a",
             "remaining": "286"
           },
           {
             "req": 9,
-            "timestamp": "2026-07-24T03:28:03.497Z",
+            "timestamp": "2026-07-24T03:47:04.161Z",
             "status": 200,
-            "servedBy": "node-a",
-            "remaining": "296"
+            "servedBy": "node-c",
+            "remaining": "288"
           },
           {
             "req": 10,
-            "timestamp": "2026-07-24T03:28:03.497Z",
-            "status": 200,
-            "servedBy": "node-b",
-            "remaining": "283"
-          },
-          {
-            "req": 11,
-            "timestamp": "2026-07-24T03:28:03.497Z",
-            "status": 200,
-            "servedBy": "node-a",
-            "remaining": "297"
-          },
-          {
-            "req": 12,
-            "timestamp": "2026-07-24T03:28:03.497Z",
-            "status": 200,
-            "servedBy": "node-b",
-            "remaining": "282"
-          },
-          {
-            "req": 13,
-            "timestamp": "2026-07-24T03:28:03.497Z",
-            "status": 200,
-            "servedBy": "node-b",
-            "remaining": "287"
-          },
-          {
-            "req": 14,
-            "timestamp": "2026-07-24T03:28:03.497Z",
-            "status": 200,
-            "servedBy": "node-a",
-            "remaining": "295"
-          },
-          {
-            "req": 15,
-            "timestamp": "2026-07-24T03:28:03.498Z",
-            "status": 200,
-            "servedBy": "node-b",
-            "remaining": "280"
-          },
-          {
-            "req": 16,
-            "timestamp": "2026-07-24T03:28:03.498Z",
-            "status": 200,
-            "servedBy": "node-c",
-            "remaining": "292"
-          },
-          {
-            "req": 17,
-            "timestamp": "2026-07-24T03:28:03.498Z",
-            "status": 200,
-            "servedBy": "node-c",
-            "remaining": "285"
-          },
-          {
-            "req": 18,
-            "timestamp": "2026-07-24T03:28:03.498Z",
+            "timestamp": "2026-07-24T03:47:04.161Z",
             "status": 200,
             "servedBy": "node-a",
             "remaining": "290"
           },
           {
-            "req": 19,
-            "timestamp": "2026-07-24T03:28:03.498Z",
+            "req": 11,
+            "timestamp": "2026-07-24T03:47:04.161Z",
             "status": 200,
             "servedBy": "node-c",
+            "remaining": "283"
+          },
+          {
+            "req": 12,
+            "timestamp": "2026-07-24T03:47:04.161Z",
+            "status": 200,
+            "servedBy": "node-b",
+            "remaining": "299"
+          },
+          {
+            "req": 13,
+            "timestamp": "2026-07-24T03:47:04.162Z",
+            "status": 200,
+            "servedBy": "node-c",
+            "remaining": "285"
+          },
+          {
+            "req": 14,
+            "timestamp": "2026-07-24T03:47:04.162Z",
+            "status": 200,
+            "servedBy": "node-a",
+            "remaining": "287"
+          },
+          {
+            "req": 15,
+            "timestamp": "2026-07-24T03:47:04.162Z",
+            "status": 200,
+            "servedBy": "node-a",
             "remaining": "284"
           },
           {
-            "req": 20,
-            "timestamp": "2026-07-24T03:28:03.498Z",
+            "req": 16,
+            "timestamp": "2026-07-24T03:47:04.162Z",
             "status": 200,
             "servedBy": "node-b",
+            "remaining": "295"
+          },
+          {
+            "req": 17,
+            "timestamp": "2026-07-24T03:47:04.162Z",
+            "status": 200,
+            "servedBy": "node-c",
             "remaining": "281"
+          },
+          {
+            "req": 18,
+            "timestamp": "2026-07-24T03:47:04.162Z",
+            "status": 200,
+            "servedBy": "node-a",
+            "remaining": "282"
+          },
+          {
+            "req": 19,
+            "timestamp": "2026-07-24T03:47:04.162Z",
+            "status": 200,
+            "servedBy": "node-b",
+            "remaining": "293"
+          },
+          {
+            "req": 20,
+            "timestamp": "2026-07-24T03:47:04.163Z",
+            "status": 200,
+            "servedBy": "node-c",
+            "remaining": "280"
           }
         ]
       }
@@ -233,9 +233,9 @@
       "denied": 0,
       "errors": 0,
       "nodeDistribution": {
-        "node-a": 29,
-        "node-b": 30,
-        "node-c": 31
+        "node-c": 29,
+        "node-b": 35,
+        "node-a": 26
       },
       "allThreeNodesServedRequests": true,
       "aggregateMatchesSingleNodeBehavior": true,
@@ -287,7 +287,7 @@
     {
       "name": "Scenario 7 — Northwind nightly-batch scenario",
       "status": "PASS",
-      "currentUtc": "03:28",
+      "currentUtc": "03:47",
       "originalWindow": {
         "startUtc": "02:00",
         "endUtc": "04:00"
@@ -335,7 +335,7 @@
   ],
   "pass": 7,
   "fail": 0,
-  "completedAt": "2026-07-24T03:29:07.449Z",
+  "completedAt": "2026-07-24T03:48:03.532Z",
   "summary": {
     "totalScenarios": 7,
     "passed": 7,

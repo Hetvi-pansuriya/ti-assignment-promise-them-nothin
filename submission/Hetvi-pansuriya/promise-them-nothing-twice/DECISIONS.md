@@ -87,7 +87,101 @@ through past the limit due to a timing gap. The limit is enforced consistently
 regardless of which server handles a given request.
 
 ## 5. Verification
-_(to be added after the load-testing harness is built and run)_
+
+The load-testing harness (`solution/harness/harness.js`) runs seven scenarios
+against the live 3-node Docker Compose deployment (not against a single local
+process), producing a structured `report.json` alongside console output.
+
+**1. Exact quota-boundary enforcement** — a test customer's exact limit's
+worth of requests all succeed; the next one is denied with a correct
+`Retry-After`. A second pass specifically straddles a real minute boundary
+to exercise the sliding-window weighting, not just a simple within-bucket
+count. **PASS.**
+
+**2. Fairness between same-tier customers** — two customers sharing the
+`growth` tier are each sent their own full effective limit's worth of
+concurrent requests (300 and 500 respectively, 800 combined), through the
+reverse proxy. Both received 100% of their own quota with zero denials,
+despite the combined load exceeding either individual limit — proving
+per-customer Redis key isolation, not just "no crosstalk under light load."
+**PASS.**
+
+**3. Isolation between customers** — one customer driven far past its limit
+while a second, lighter customer runs concurrently; the second customer's
+full per-request log (timestamp + status per request) is included in
+`report.json` so the "zero attributable 429s" claim is independently
+verifiable from the report itself. **PASS.**
+
+**4. Randomized traffic across all 3 nodes** — requests fired through the
+proxy with no client-side node targeting; `X-Served-By` confirms traffic
+actually spread across `node-a`/`node-b`/`node-c`, and the aggregate
+accept/deny count matched what a single coordinated limiter would produce
+for the same customer and load. **PASS.**
+
+**5. Race condition — concurrent requests fanned out to all 3 nodes
+simultaneously** — the direct regression test for the bug class that sank
+an earlier internal prototype. 75 concurrent requests fired directly at
+the three nodes' individual ports (bypassing the proxy) against a 60 RPM
+customer: exactly 60 accepted, 15 denied — the atomic Redis Lua script
+held the line even under genuinely parallel evaluation across three
+processes. **PASS.**
+
+**6. Unknown customer path** — missing header returns `401`; unrecognized
+customer ID returns `403`; confirmed via `docker-compose exec redis
+redis-cli KEYS` that zero Redis keys were created for the unrecognized
+identity. **PASS.**
+
+**7. Northwind nightly-batch scenario** — replayed sustained 800–1200 RPM
+against a temporarily mocked override window. Inside the mocked-active
+window: 400/400 allowed, zero denials. Outside it (mocked-inactive,
+deliberately computed to never overlap real current time, since the
+harness can run at any hour including the real 02:00–04:00 window):
+300 allowed, 100 denied against the base 300 RPM. The real `02:00–04:00`
+override window was restored in every case via a `try/finally` block and
+verified on disk after the run.
+
+**Two real defects were caught and fixed during this process, not just
+theoretical risks:**
+- The `Retry-After` calculation initially only accounted for previous-bucket
+  decay, giving an incorrect (too-short) wait time when the *current*
+  bucket alone was already at or over the limit. Fixed by taking the
+  binding constraint conditionally: time-until-window-rollover when
+  `cur_count >= effectiveRpm`, decay-based wait otherwise. Verified with a
+  real wait-and-retry test in both regimes.
+- Northwind's override-window activation was initially being resolved
+  using a placeholder/app-node value rather than Redis's own clock,
+  reopening the exact cross-node clock-drift risk the design was meant to
+  eliminate. Fixed by moving the window-matching decision itself inside
+  the Lua script, using `redis.call('TIME')` as the only time source.
 
 ## 6. If I had 4 more hours
-_(to be added at the end)_
+
+- **Config hot-reload** — replace the startup-only config load with a
+  shared store (Redis itself, since it's already the common dependency)
+  or a validated `/admin/reload-config` endpoint, so a tier change or a
+  new override doesn't require restarting all three nodes.
+- **`EVALSHA` over inline `EVAL`** — the Lua script is currently sent in
+  full on every call; switching to `SCRIPT LOAD` + `EVALSHA` (with a
+  `NOSCRIPT` fallback to reload) would cut payload size per request at
+  meaningful scale.
+- **Distributed fail-open ceiling** — the current Redis-outage fallback is
+  a per-node in-memory counter, so three nodes each independently allow
+  up to 60 RPM (effectively ~180 RPM system-wide during an outage, not a
+  true 60 RPM ceiling). A short-lived local Redis replica or a
+  coordinated fallback (e.g. each node claiming a fixed fraction of the
+  ceiling) would tighten this guarantee.
+- **Adaptive/expiring overrides** — the Northwind override is a static
+  config block with an `owner`/`reviewDate` for auditability, but nothing
+  enforces the review actually happens. A scheduled check (or a startup
+  warning) that flags overrides past their `reviewDate` would close that
+  gap.
+- **Broader customer catalog in the harness** — the current harness reuses
+  four config-defined test customers across all seven scenarios; a
+  dedicated set of harness-only customers (created and torn down per run)
+  would remove any coupling between test data and the "real" customer
+  config.
+- **Metrics/observability** — the `REDIS_OUTAGE_FAILOPEN` event and
+  per-customer resolution `source` are currently logged but not exported
+  anywhere queryable; a Prometheus counter per (customer, decision-source,
+  outcome) would make the auditability claim operationally checkable, not
+  just log-greppable.
